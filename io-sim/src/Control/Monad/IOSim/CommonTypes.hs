@@ -81,7 +81,7 @@ data IOSimThreadId =
   deriving anyclass NoThunks
 
 listOfSomeId :: SomeId -> [Int]
-listOfSomeId = coerce
+listOfSomeId = reverse . coerce
 
 ppIOSimThreadId :: IOSimThreadId -> String
 ppIOSimThreadId (RacyThreadId as) = "Thread {"++ intercalate "," (map show (listOfSomeId as)) ++"}"
@@ -91,9 +91,12 @@ app :: [a] -> [a] -> [a]
 app [] xs = xs
 app (x:xs) ys = x : app xs ys
 
+pushOnSomeId :: SomeId -> Int -> SomeId
+pushOnSomeId (SomeId is) i = SomeId (i : is)
+
 childThreadId :: IOSimThreadId -> Int -> IOSimThreadId
-childThreadId (RacyThreadId is) i = RacyThreadId (coerce $ app (coerce is) [i])
-childThreadId (ThreadId     is) i = ThreadId     (coerce $ app (coerce is) [i])
+childThreadId (RacyThreadId is) i = RacyThreadId (pushOnSomeId is i)
+childThreadId (ThreadId     is) i = ThreadId     (pushOnSomeId is i)
 
 setRacyThread :: IOSimThreadId -> IOSimThreadId
 setRacyThread (ThreadId is)      = RacyThreadId is
