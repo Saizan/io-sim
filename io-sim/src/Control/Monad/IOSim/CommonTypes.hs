@@ -69,9 +69,13 @@ ppIOSimThreadId :: IOSimThreadId -> String
 ppIOSimThreadId (RacyThreadId as) = "Thread {"++ intercalate "," (map show as) ++"}"
 ppIOSimThreadId     (ThreadId as) = "Thread " ++ show as
 
+app :: [a] -> [a] -> [a]
+app [] xs = xs
+app (x:xs) ys = x : app xs ys
+
 childThreadId :: IOSimThreadId -> Int -> IOSimThreadId
-childThreadId (RacyThreadId is) i = RacyThreadId (is ++ [i])
-childThreadId (ThreadId     is) i = ThreadId     (is ++ [i])
+childThreadId (RacyThreadId is) i = RacyThreadId (app is [i])
+childThreadId (ThreadId     is) i = ThreadId     (app is [i])
 
 setRacyThread :: IOSimThreadId -> IOSimThreadId
 setRacyThread (ThreadId is)      = RacyThreadId is
