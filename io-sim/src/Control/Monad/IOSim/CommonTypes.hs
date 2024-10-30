@@ -28,6 +28,9 @@ module Control.Monad.IOSim.CommonTypes
   , Deschedule (..)
   , ThreadStatus (..)
   , BlockedReason (..)
+  , SomeId
+  , nullId
+  , singleId
     -- * Utils
   , ppList
   ) where
@@ -38,6 +41,7 @@ import Control.Monad.ST.Lazy
 
 import NoThunks.Class
 
+import Data.Coerce (coerce)
 import Data.List (intercalate, intersperse)
 import Data.Map (Map)
 import Data.Map qualified as Map
@@ -46,6 +50,17 @@ import Data.STRef.Lazy
 import GHC.Generics
 import Quiet
 
+
+newtype SomeId = SomeId [Int]
+  deriving stock    (Eq, Ord, Show, Generic)
+  deriving anyclass NFData
+  deriving anyclass NoThunks
+
+nullId :: SomeId
+nullId = SomeId []
+
+singleId :: Int -> SomeId
+singleId i = SomeId [i]
 
 -- | A thread id.
 --
@@ -57,25 +72,28 @@ import Quiet
 data IOSimThreadId =
     -- | A racy thread (`IOSimPOR` only), shown in the trace with curly braces,
     -- e.g. `Thread {2,3}`.
-    RacyThreadId [Int]
+    RacyThreadId SomeId
     -- | A non racy thread.  They have higher priority than racy threads in
     -- `IOSimPOR` scheduler.
-  | ThreadId     [Int]
+  | ThreadId     SomeId
   deriving stock    (Eq, Ord, Show, Generic)
   deriving anyclass NFData
   deriving anyclass NoThunks
 
+listOfSomeId :: SomeId -> [Int]
+listOfSomeId = coerce
+
 ppIOSimThreadId :: IOSimThreadId -> String
-ppIOSimThreadId (RacyThreadId as) = "Thread {"++ intercalate "," (map show as) ++"}"
-ppIOSimThreadId     (ThreadId as) = "Thread " ++ show as
+ppIOSimThreadId (RacyThreadId as) = "Thread {"++ intercalate "," (map show (listOfSomeId as)) ++"}"
+ppIOSimThreadId     (ThreadId as) = "Thread " ++ show (listOfSomeId as)
 
 app :: [a] -> [a] -> [a]
 app [] xs = xs
 app (x:xs) ys = x : app xs ys
 
 childThreadId :: IOSimThreadId -> Int -> IOSimThreadId
-childThreadId (RacyThreadId is) i = RacyThreadId (app is [i])
-childThreadId (ThreadId     is) i = ThreadId     (app is [i])
+childThreadId (RacyThreadId is) i = RacyThreadId (coerce $ app (coerce is) [i])
+childThreadId (ThreadId     is) i = ThreadId     (coerce $ app (coerce is) [i])
 
 setRacyThread :: IOSimThreadId -> IOSimThreadId
 setRacyThread (ThreadId is)      = RacyThreadId is
@@ -94,7 +112,7 @@ ppStepId (tid, step) = concat [ppIOSimThreadId tid, ".", show step]
 
 newtype TVarId      = TVarId    Int   deriving (Eq, Ord, Enum, Show)
 newtype TimeoutId   = TimeoutId Int   deriving (Eq, Ord, Enum, Show)
-newtype ClockId     = ClockId   [Int] deriving (Eq, Ord, Show)
+newtype ClockId     = ClockId   SomeId deriving (Eq, Ord, Show)
 newtype VectorClock = VectorClock { getVectorClock :: Map IOSimThreadId Int }
   deriving Generic
   deriving Show via Quiet VectorClock

@@ -160,7 +160,7 @@ initialState =
       threads  = Map.empty,
       curTime  = Time 0,
       timers   = PSQ.empty,
-      clocks   = Map.singleton (ClockId []) epoch1970,
+      clocks   = Map.singleton (ClockId nullId) epoch1970,
       nextVid  = TVarId 0,
       nextTmid = TimeoutId 0
     }
@@ -763,15 +763,15 @@ reschedule !simstate@SimState{ threads, timers, curTime = time } =
                                         , timers  = timers' }
 
         return $
-          traceMany ([ ( time', ThreadId [-1], Just "timer"
+          traceMany ([ ( time', ThreadId (singleId (-1)), Just "timer"
                        , EventTimerFired tmid)
                      | (tmid, Timer _) <- zip tmids fired ]
-                  ++ [ ( time', ThreadId [-1], Just "register delay timer"
+                  ++ [ ( time', ThreadId (singleId (-1)), Just "register delay timer"
                        , EventRegisterDelayFired tmid)
                      | (tmid, TimerRegisterDelay _) <- zip tmids fired ]
-                  ++ [ (time', ThreadId [-1], Just "register delay timer", EventLog (toDyn a))
+                  ++ [ (time', ThreadId (singleId (-1)), Just "register delay timer", EventLog (toDyn a))
                      | TraceValue { traceDynamic = Just a } <- ds ]
-                  ++ [ (time', ThreadId [-1], Just "register delay timer", EventSay a)
+                  ++ [ (time', ThreadId (singleId (-1)), Just "register delay timer", EventSay a)
                      | TraceValue { traceString = Just a } <- ds ]
                   ++ [ (time', tid', tlbl', EventTxWakeup vids)
                      | tid' <- wakeupSTM
@@ -1004,12 +1004,12 @@ runSimTraceST mainAction = schedule mainThread initialState
   where
     mainThread =
       Thread {
-        threadId      = ThreadId [],
+        threadId      = ThreadId nullId,
         threadControl = ThreadControl (runIOSim mainAction) MainFrame,
         threadStatus  = ThreadRunning,
         threadMasking = Unmasked,
         threadThrowTo = [],
-        threadClockId = ClockId [],
+        threadClockId = ClockId nullId,
         threadLabel   = Just "main",
         threadNextTId = 1
       }

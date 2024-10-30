@@ -564,7 +564,7 @@ unit_async_1 =
           threadDelay 1
       )
  ===
-   ["main ThreadId []", "parent ThreadId [1]", "child ThreadId [1]"]
+   ["main ThreadId (SomeId [])", "parent ThreadId (SomeId [1])", "child ThreadId (SomeId [1])"]
 
 
 unit_async_2 =
