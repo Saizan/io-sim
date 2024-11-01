@@ -52,7 +52,8 @@ import Quiet
 
 
 newtype SomeId = SomeId [Int]
-  deriving stock    (Eq, Ord, Show, Generic)
+  deriving stock    (Eq, Ord, Generic)
+  deriving newtype  Show
   deriving anyclass NFData
   deriving anyclass NoThunks
 
