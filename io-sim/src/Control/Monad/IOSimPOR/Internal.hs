@@ -88,6 +88,7 @@ import Control.Monad.IOSim.Types (SimEvent)
 import Control.Monad.IOSimPOR.Timeout (unsafeTimeout)
 import Control.Monad.IOSimPOR.Types
 import Data.Coerce (coerce, Coercible)
+import Data.Hashable
 
 --
 -- Simulation interpreter
@@ -180,6 +181,8 @@ data TimerCompletionInfo s =
      | TimerTimeout !IOSimThreadId !TimeoutId !(TMVar (IOSim s) IOSimThreadId)
      -- ^ `timeout` timer run by `IOSimThreadId` which was assigned the given
      -- `TimeoutId` (only used to report in a trace).
+
+instance Hashable a => Hashable (Down a)
 
 type RunQueue   = HashPSQ (Down IOSimThreadId) (Down IOSimThreadId) ()
 type Timeouts s = IntPSQ Time (TimerCompletionInfo s)
