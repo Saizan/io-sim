@@ -59,8 +59,8 @@ import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Maybe (mapMaybe)
 import Data.Ord
-import Data.OrdPSQ (OrdPSQ)
-import Data.OrdPSQ qualified as PSQ
+import Data.HashPSQ (HashPSQ)
+import Data.HashPSQ qualified as PSQ
 import Data.IntPSQ (IntPSQ)
 import Data.IntPSQ qualified as IPSQ
 import Data.Set (Set)
@@ -181,7 +181,7 @@ data TimerCompletionInfo s =
      -- ^ `timeout` timer run by `IOSimThreadId` which was assigned the given
      -- `TimeoutId` (only used to report in a trace).
 
-type RunQueue   = OrdPSQ (Down IOSimThreadId) (Down IOSimThreadId) ()
+type RunQueue   = HashPSQ (Down IOSimThreadId) (Down IOSimThreadId) ()
 type Timeouts s = IntPSQ Time (TimerCompletionInfo s)
 
 -- | Internal state.
